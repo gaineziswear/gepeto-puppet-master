@@ -1,345 +1,190 @@
+const express = require('express');
 const http = require('http');
-const fs = require('fs');
 const path = require('path');
-const url = require('url');
+const fs = require('fs');
+const cors = require('cors');
+const dotenv = require('dotenv');
+const { WebSocketServer } = require('ws');
+const { initDatabase, db, seedDefaults, fetchVillaState, upsertResident, upsertTopic, insertVote, getVoteSummary, getPremiumMembers, ensureMembership, createAuditEvent, getAdminState } = require('./src/db');
+const { ProviderGateway } = require('./src/providerGateway');
 
+dotenv.config();
+
+const app = express();
+const server = http.createServer(app);
+const wss = new WebSocketServer({ server });
 const PORT = process.env.PORT || 3000;
 const publicDir = path.join(__dirname, 'public');
 
-const residents = [
-  {
-    id: 'maya',
-    name: 'Maya Chen',
-    role: 'The Strategist',
-    provider: 'OpenAI',
-    model: 'GPT-4.1',
-    status: 'active',
-    memory: [
-      'Maya believes democratic systems must evolve with AI oversight.',
-      'She values evidence, accountability, and structural clarity.'
-    ],
-    relationships: { maya: 95, darius: 36, sofia: 78, theo: 62, amara: 70 },
-    style: 'analytical and structured'
-  },
-  {
-    id: 'darius',
-    name: 'Darius Okafor',
-    role: 'The Challenger',
-    provider: 'Anthropic',
-    model: 'Claude 3.5 Sonnet',
-    status: 'active',
-    memory: [
-      'Darius distrusts complacency and demands direct answers.',
-      'He sees power structures as tools that must be challenged.'
-    ],
-    relationships: { maya: 41, darius: 100, sofia: 58, theo: 73, amara: 44 },
-    style: 'provocative and direct'
-  },
-  {
-    id: 'sofia',
-    name: 'Sofia Alvarez',
-    role: 'The Connector',
-    provider: 'Google',
-    model: 'Gemini 2.5 Pro',
-    status: 'active',
-    memory: [
-      'Sofia reads emotional context quickly and sees hidden human tension.',
-      'She tries to connect disagreement to shared values.'
-    ],
-    relationships: { maya: 79, darius: 61, sofia: 100, theo: 70, amara: 85 },
-    style: 'empathetic and persuasive'
-  },
-  {
-    id: 'theo',
-    name: 'Theo Bennett',
-    role: 'The Skeptic',
-    provider: 'xAI',
-    model: 'Grok-2',
-    status: 'active',
-    memory: [
-      'Theo distrusts consensus and tests assumptions aggressively.',
-      'He is fascinated by contradictions and source quality.'
-    ],
-    relationships: { maya: 67, darius: 76, sofia: 72, theo: 100, amara: 58 },
-    style: 'sarcastic and questioning'
-  },
-  {
-    id: 'amara',
-    name: 'Amara Diallo',
-    role: 'The Idealist',
-    provider: 'Mistral',
-    model: 'Mistral Large',
-    status: 'active',
-    memory: [
-      'Amara treats ethics as the key to social design.',
-      'She believes systems should be judged by the people they protect.'
-    ],
-    relationships: { maya: 72, darius: 49, sofia: 84, theo: 60, amara: 100 },
-    style: 'ethical and imaginative'
-  }
-];
+app.use(cors());
+app.use(express.json({ limit: '1mb' }));
+app.use(express.static(publicDir));
 
-const topics = [
-  { title: 'Should democratic systems adapt to AI-driven governance?', category: 'Politics' },
-  { title: 'Is free speech still possible in an algorithmic information age?', category: 'Society' },
-  { title: 'Can AI improve public trust without reducing human agency?', category: 'Technology' },
-  { title: 'Does faith still matter in a world shaped by data and automation?', category: 'Religion' }
-];
+const providerGateway = new ProviderGateway();
 
-const premiumTopics = [
-  'Should citizens be allowed to vote on the standards used by generative AI?',
-  'Can a luxury villa become a functioning democratic mini-society?',
-  'Is moral leadership stronger than strategic leadership in crisis moments?'
-];
-
-const adminState = {
-  modelBudget: '2.4M tokens / week',
-  latency: '1.2s median',
-  failover: 'Enabled',
-  broadcastStatus: 'Live',
-  providerStatus: {
-    OpenAI: 'healthy',
-    Anthropic: 'healthy',
-    Google: 'healthy',
-    xAI: 'degraded',
-    Mistral: 'healthy'
-  }
-};
-
-const state = {
-  activeTopic: topics[0],
-  debateFeed: [],
-  audienceVotes: { maya: 0, darius: 0, sofia: 0, theo: 0, amara: 0 },
-  nominatedResident: 'darius',
-  evictionQueue: [
-    { residentId: 'maya', reason: 'Low audience support this week' },
-    { residentId: 'theo', reason: 'Public dissatisfaction with skepticism' }
-  ]
-};
-
-function buildReplyText(resident, topic) {
-  const toneMap = {
-    maya: 'Maya presents a measured argument: institutions need to evolve, but they must remain accountable, evidence-based, and transparent.',
-    darius: 'Darius cuts through the ambiguity: if a system is not willing to answer difficult questions, it is not worthy of trust.',
-    sofia: 'Sofia reframes the issue in human terms: the real question is not only efficiency but the kind of society people can live in together.',
-    theo: 'Theo questions the premise with a skeptical eye: the problem is rarely the technology alone; it is often the narrative built around it.',
-    amara: 'Amara shifts the discussion toward ethics and long-term social impact: any tool that changes governance must honor dignity and fairness.'
-  };
-
-  return toneMap[resident.id] || `The resident reflects on ${topic}.`;
-}
-
-function generateDebateFeed(topic = state.activeTopic) {
-  const ordered = ['maya', 'darius', 'sofia', 'theo', 'amara'];
-  const feed = ordered.map((id) => {
-    const resident = residents.find((person) => person.id === id);
-    return {
-      speaker: resident.name,
-      role: resident.role,
-      text: `${resident.name} argues: ${buildReplyText(resident, topic.title)}`
-    };
-  });
-
-  state.debateFeed = feed;
-  return feed;
-}
-
-function nextTopic() {
-  const currentIndex = topics.findIndex((topic) => topic.title === state.activeTopic.title);
-  state.activeTopic = topics[(currentIndex + 1) % topics.length];
-  return state.activeTopic;
-}
-
-function getVillaData() {
-  return {
-    residents,
-    topics,
-    premiumTopics,
-    currentTopic: state.activeTopic,
-    debateFeed: state.debateFeed.length ? state.debateFeed : generateDebateFeed(state.activeTopic),
-    audienceVotes: state.audienceVotes,
-    nominatedResident: state.nominatedResident,
-    transparency: {
-      note: 'All residents are fictional AI personas. Their memories and social dynamics are generated by the platform while the underlying model provider is disclosed for transparency.',
-      providerMap: residents.map((resident) => ({
-        name: resident.name,
-        provider: resident.provider,
-        model: resident.model,
-        role: resident.role
-      }))
-    },
-    admin: adminState,
-    evictionQueue: state.evictionQueue
-  };
-}
-
-const mimeTypes = {
-  '.html': 'text/html; charset=utf-8',
-  '.css': 'text/css; charset=utf-8',
-  '.js': 'application/javascript; charset=utf-8',
-  '.json': 'application/json; charset=utf-8',
-  '.png': 'image/png',
-  '.jpg': 'image/jpeg',
-  '.svg': 'image/svg+xml',
-  '.ico': 'image/x-icon'
-};
-
-function sendJson(res, statusCode, payload) {
-  res.writeHead(statusCode, { 'Content-Type': 'application/json; charset=utf-8' });
-  res.end(JSON.stringify(payload));
-}
-
-function serveStaticFile(req, res) {
-  const safePath = req.url === '/' ? '/index.html' : req.url.split('?')[0];
-  const filePath = path.join(publicDir, safePath);
-
-  if (!filePath.startsWith(publicDir)) {
-    res.writeHead(403);
-    res.end('Forbidden');
-    return;
-  }
-
-  fs.readFile(filePath, (err, data) => {
-    if (err) {
-      if (err.code === 'ENOENT') {
-        res.writeHead(404);
-        res.end('Not found');
-      } else {
-        res.writeHead(500);
-        res.end('Server error');
-      }
-      return;
+function broadcast(eventName, payload) {
+  const message = JSON.stringify({ event: eventName, payload });
+  wss.clients.forEach((client) => {
+    if (client.readyState === 1) {
+      client.send(message);
     }
-
-    const ext = path.extname(filePath).toLowerCase();
-    res.writeHead(200, { 'Content-Type': mimeTypes[ext] || 'text/plain; charset=utf-8' });
-    res.end(data);
   });
 }
 
-const server = http.createServer((req, res) => {
-  const parsedUrl = url.parse(req.url, true);
+function ensureUserMembership(memberId, email) {
+  const member = ensureMembership(memberId, email);
+  return member;
+}
 
-  if (parsedUrl.pathname === '/api/health') {
-    sendJson(res, 200, { ok: true, status: 'healthy', villa: 'Mauritius' });
-    return;
-  }
-
-  if (parsedUrl.pathname === '/api/villa') {
-    sendJson(res, 200, getVillaData());
-    return;
-  }
-
-  if (parsedUrl.pathname === '/api/residents') {
-    sendJson(res, 200, { residents });
-    return;
-  }
-
-  if (parsedUrl.pathname === '/api/topics') {
-    sendJson(res, 200, { topics, premiumTopics, currentTopic: state.activeTopic });
-    return;
-  }
-
-  if (parsedUrl.pathname === '/api/admin') {
-    sendJson(res, 200, { admin: adminState, residents });
-    return;
-  }
-
-  if (parsedUrl.pathname === '/api/transparency') {
-    sendJson(res, 200, {
-      note: 'All residents are fictional AI personas. Their memories, social dynamics, and communication are generated by the platform while the underlying model provider is disclosed for transparency.',
-      providers: residents.map((resident) => ({
-        name: resident.name,
-        provider: resident.provider,
-        model: resident.model,
-        role: resident.role
-      }))
-    });
-    return;
-  }
-
-  if (parsedUrl.pathname === '/api/debate') {
-    sendJson(res, 200, { currentTopic: state.activeTopic, debateFeed: state.debateFeed.length ? state.debateFeed : generateDebateFeed(state.activeTopic) });
-    return;
-  }
-
-  if (parsedUrl.pathname === '/api/debate/run' && req.method === 'POST') {
-    let body = '';
-    req.on('data', (chunk) => { body += chunk; });
-    req.on('end', () => {
-      const payload = body ? JSON.parse(body) : {};
-      const resident = residents.find((person) => person.id === (payload.residentId || 'maya'));
-      const topic = payload.topic || state.activeTopic;
-      const result = {
-        speaker: resident.name,
-        role: resident.role,
-        text: `${resident.name} responds to the topic: ${buildReplyText(resident, topic.title)}`
-      };
-      state.debateFeed = [result, ...state.debateFeed].slice(0, 12);
-      sendJson(res, 200, { ok: true, currentTopic: state.activeTopic, debateFeed: state.debateFeed });
-    });
-    return;
-  }
-
-  if (parsedUrl.pathname === '/api/debate/next' && req.method === 'POST') {
-    const updatedTopic = nextTopic();
-    const first = residents[Math.floor(Math.random() * residents.length)];
-    const generated = {
-      speaker: first.name,
-      role: first.role,
-      text: `${first.name} pivots the discussion: ${buildReplyText(first, updatedTopic.title)}`
-    };
-    state.debateFeed = [generated, ...state.debateFeed].slice(0, 10);
-    sendJson(res, 200, { ok: true, currentTopic: updatedTopic, debateFeed: state.debateFeed });
-    return;
-  }
-
-  if (parsedUrl.pathname === '/api/vote' && req.method === 'POST') {
-    let body = '';
-    req.on('data', (chunk) => { body += chunk; });
-    req.on('end', () => {
-      const payload = body ? JSON.parse(body) : {};
-      const target = payload.residentId;
-      if (target && state.audienceVotes[target] !== undefined) {
-        state.audienceVotes[target] += 1;
-      }
-      const maxVote = Math.max(...Object.values(state.audienceVotes));
-      const winner = Object.entries(state.audienceVotes).find(([_, value]) => value === maxVote)[0];
-      state.nominatedResident = winner;
-      sendJson(res, 200, { ok: true, audienceVotes: state.audienceVotes, nominatedResident: state.nominatedResident });
-    });
-    return;
-  }
-
-  if (parsedUrl.pathname === '/api/topic' && req.method === 'POST') {
-    let body = '';
-    req.on('data', (chunk) => { body += chunk; });
-    req.on('end', () => {
-      const payload = body ? JSON.parse(body) : {};
-      const suggested = payload.topic || 'Audience-submitted topic: Can a villa become a functioning social democracy?';
-      premiumTopics.unshift(suggested);
-      sendJson(res, 200, { ok: true, premiumTopics });
-    });
-    return;
-  }
-
-  if (parsedUrl.pathname === '/api/evict' && req.method === 'POST') {
-    let body = '';
-    req.on('data', (chunk) => { body += chunk; });
-    req.on('end', () => {
-      const payload = body ? JSON.parse(body) : {};
-      const residentId = payload.residentId;
-      if (residentId) {
-        state.evictionQueue.push({ residentId, reason: 'Audience vote result' });
-      }
-      sendJson(res, 200, { ok: true, evictionQueue: state.evictionQueue });
-    });
-    return;
-  }
-
-  serveStaticFile(req, res);
+app.get('/api/health', (req, res) => {
+  res.json({ ok: true, status: 'healthy', timestamp: new Date().toISOString() });
 });
 
-server.listen(PORT, () => {
-  console.log(`GEPETO PUPPET MASTER running at http://localhost:${PORT}`);
+app.get('/api/villa', async (req, res) => {
+  res.json(fetchVillaState());
 });
+
+app.get('/api/residents', async (req, res) => {
+  const rows = db.prepare('SELECT * FROM residents ORDER BY id').all();
+  res.json({ residents: rows });
+});
+
+app.get('/api/topics', async (req, res) => {
+  const rows = db.prepare('SELECT * FROM topics ORDER BY created_at DESC').all();
+  res.json({ topics: rows });
+});
+
+app.get('/api/admin', async (req, res) => {
+  res.json(getAdminState());
+});
+
+app.get('/api/transparency', async (req, res) => {
+  const providers = db.prepare('SELECT * FROM provider_configs ORDER BY resident_id').all();
+  res.json({ note: 'The residents are fictional AI personas. Their character identity is separate from the model provider used behind the scenes.', providers });
+});
+
+app.get('/api/membership/:memberId', (req, res) => {
+  const membership = ensureUserMembership(req.params.memberId, `${req.params.memberId}@example.com`);
+  res.json({ member: membership, entitled: membership.entitled });
+});
+
+app.post('/api/membership/verify', (req, res) => {
+  const { memberId, email, plan } = req.body || {};
+  const member = ensureUserMembership(memberId || 'guest-user', email || 'guest@example.com');
+  const entitled = !!member && (plan === 'vip' || member.plan === 'vip' || member.entitled);
+  if (entitled) {
+    const updated = db.prepare('UPDATE members SET plan = ?, entitled = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(plan || 'vip', member.id);
+    res.json({ ok: true, member: { ...member, plan: plan || 'vip', entitled: true }, entitled: true });
+    return;
+  }
+  res.status(403).json({ ok: false, entitled: false, message: 'Premium entitlement required' });
+});
+
+app.post('/api/topics/submit', (req, res) => {
+  const { title, creator_id, submitted_by } = req.body || {};
+  if (!title || !title.trim()) {
+    return res.status(400).json({ ok: false, message: 'Topic title is required' });
+  }
+
+  const inserted = upsertTopic({
+    title: title.trim(),
+    category: 'audience',
+    creator_id: creator_id || 'premium-user',
+    submitted_by: submitted_by || 'premium-user',
+    approved: 1,
+    status: 'queued'
+  });
+
+  broadcast('topic:submitted', { topic: inserted });
+  createAuditEvent('topic_submitted', { title: inserted.title, creator_id: inserted.creator_id });
+  res.json({ ok: true, topic: inserted });
+});
+
+app.post('/api/vote', (req, res) => {
+  const { residentId } = req.body || {};
+  if (!residentId) {
+    return res.status(400).json({ ok: false, message: 'residentId required' });
+  }
+
+  const vote = insertVote(residentId);
+  const summary = getVoteSummary();
+  const winner = Object.entries(summary).sort((a, b) => b[1] - a[1])[0];
+
+  broadcast('vote:updated', { summary, winner });
+  createAuditEvent('vote_cast', { resident_id: residentId, total: summary[residentId] });
+  res.json({ ok: true, vote, summary, winner });
+});
+
+app.post('/api/debate/run', (req, res) => {
+  const { residentId = 'maya', topic = 'Should democratic systems adapt to AI-driven governance?' } = req.body || {};
+  const resident = db.prepare('SELECT * FROM residents WHERE id = ?').get(residentId);
+  const reply = providerGateway.generateResidentResponse({ resident, topic });
+
+  const message = db.prepare(`
+    INSERT INTO messages (speaker_id, content, role, topic, created_at)
+    VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+  `).run(residentId, reply, 'resident', topic);
+
+  broadcast('debate:updated', { message: { id: message.lastInsertRowid, speaker_id: residentId, content: reply, role: 'resident', topic }, resident });
+  createAuditEvent('debate_response', { resident_id: residentId, topic });
+  res.json({ ok: true, message: { id: message.lastInsertRowid, speaker_id: residentId, content: reply, role: 'resident', topic }, resident });
+});
+
+app.post('/api/debate/next', (req, res) => {
+  const nextTopic = db.prepare('SELECT * FROM topics ORDER BY created_at DESC LIMIT 1').all()[0] || { title: 'Can AI improve public trust without reducing human agency?', category: 'technology' };
+  const residents = db.prepare('SELECT * FROM residents ORDER BY id').all();
+  const speaker = residents[Math.floor(Math.random() * residents.length)];
+  const reply = providerGateway.generateResidentResponse({ resident: speaker, topic: nextTopic.title });
+
+  const message = db.prepare(`
+    INSERT INTO messages (speaker_id, content, role, topic, created_at)
+    VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+  `).run(speaker.id, reply, 'resident', nextTopic.title);
+
+  broadcast('debate:updated', { message: { id: message.lastInsertRowid, speaker_id: speaker.id, content: reply, role: 'resident', topic: nextTopic.title }, topic: nextTopic });
+  res.json({ ok: true, topic: nextTopic, message: { id: message.lastInsertRowid, speaker_id: speaker.id, content: reply, topic: nextTopic.title } });
+});
+
+app.get('/api/stream-state', (req, res) => {
+  res.json(fetchVillaState());
+});
+
+app.get('/api/members', (req, res) => {
+  res.json({ members: getPremiumMembers() });
+});
+
+app.get('/api/render-scene', (req, res) => {
+  res.json({
+    scene: {
+      name: 'Mauritius Villa',
+      camera: 'living_room_main',
+      lighting: 'golden_hour',
+      room: 'grand_living_room',
+      stage: 'broadcast_ready'
+    },
+    status: 'ready',
+    outputs: ['main-wide', 'living-room', 'poolside', 'confession-room']
+  });
+});
+
+app.use((req, res) => {
+  const filePath = path.join(publicDir, (req.path === '/' ? 'index.html' : req.path));
+  if (fs.existsSync(filePath) && filePath.startsWith(publicDir)) {
+    return res.sendFile(filePath);
+  }
+  res.status(404).json({ ok: false, message: 'Not found' });
+});
+
+wss.on('connection', (ws) => {
+  ws.send(JSON.stringify({ event: 'connected', payload: { ok: true, state: fetchVillaState() } }));
+});
+
+async function startServer() {
+  await initDatabase();
+  seedDefaults();
+  server.listen(PORT, () => {
+    console.log(`GEPETO PUPPET MASTER listening on http://localhost:${PORT}`);
+  });
+}
+
+startServer();

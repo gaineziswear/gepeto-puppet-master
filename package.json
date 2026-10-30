@@ -1,10 +1,17 @@
 {
   "name": "gepeto-puppet-master",
-  "version": "1.0.0",
-  "description": "Autonomous AI reality villa simulation",
+  "version": "2.0.0",
+  "description": "Autonomous AI reality villa platform MVP with provider abstraction, SQLite persistence, WebSockets, and premium access simulation.",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "node --watch server.js"
   },
-  "license": "MIT"
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "sqlite3": "^5.1.7",
+    "ws": "^8.18.0"
+  }
 }
