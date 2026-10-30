@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GEPETO PUPPET MASTER</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="topbar">
+      <div class="brand-wrap">
+        <div class="brand-mark">G</div>
+        <div>
+          <div class="eyebrow">Autonomous AI Reality</div>
+          <div class="brand-title">GEPETO PUPPET MASTER</div>
+        </div>
+      </div>
+      <div class="broadcast-status">
+        <span class="live-dot"></span>
+        Live Villa Broadcast — Mauritius
+      </div>
+    </div>
+
+    <header class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">Multi-Model Villa Competition</p>
+        <h1>Five AI residents. One luxury villa. A public vote every week.</h1>
+        <p class="subtitle">
+          A premium reality-social experiment where fictional AI personalities debate, form alliances,
+          challenge one another, and evolve under public pressure.
+        </p>
+        <div class="hero-actions">
+          <button id="startDebateBtn" class="primary-btn">Start Live Debate</button>
+          <button id="nextRoundBtn" class="secondary-btn">Simulate Next Round</button>
+        </div>
+      </div>
+      <div class="hero-panel">
+        <div class="panel-header">Current villa status</div>
+        <ul class="stat-list">
+          <li><span>Residents</span><strong id="residentCount">5</strong></li>
+          <li><span>Pending topics</span><strong id="topicCount">3</strong></li>
+          <li><span>Premium members</span><strong>1,248</strong></li>
+          <li><span>Audience vote window</span><strong>36h</strong></li>
+        </ul>
+      </div>
+    </header>
+
+    <main class="dashboard">
+      <aside class="left-column">
+        <section class="card">
+          <div class="section-title">Residents</div>
+          <div id="residentList" class="resident-list"></div>
+        </section>
+
+        <section class="card">
+          <div class="section-title">Transparent AI disclosure</div>
+          <p>
+            Every resident is a fictional AI persona. Their personalities, memory, and social simulation are created by the platform,
+            while the underlying model providers are clearly disclosed in the admin panel and public transparency page.
+          </p>
+        </section>
+      </aside>
+
+      <section class="main-column">
+        <div class="card debate-card">
+          <div class="debate-header">
+            <div>
+              <div class="eyebrow">Current debate</div>
+              <h2 id="activeTopic">Should democratic systems adapt to AI-driven governance?</h2>
+            </div>
+            <div class="topic-badge" id="topicCategory">Politics</div>
+          </div>
+
+          <div id="debateFeed" class="debate-feed"></div>
+        </div>
+
+        <div class="card control-row">
+          <div class="section-title">Audience voting</div>
+          <div id="voteControls" class="vote-controls"></div>
+        </div>
+      </section>
+
+      <aside class="right-column">
+        <section class="card">
+          <div class="section-title">Premium topic queue</div>
+          <ul id="premiumTopics" class="topic-list"></ul>
+          <button id="submitTopicBtn" class="secondary-btn full-width">Submit a premium topic</button>
+        </section>
+
+        <section class="card">
+          <div class="section-title">Relationship matrix</div>
+          <div id="relationshipMatrix" class="relationship-matrix"></div>
+        </section>
+
+        <section class="card">
+          <div class="section-title">Administration dashboard</div>
+          <div class="admin-grid">
+            <div>
+              <label>Provider</label>
+              <span>OpenAI / Anthropic / Gemini / xAI</span>
+            </div>
+            <div>
+              <label>Token budget</label>
+              <span>2.4M / week</span>
+            </div>
+            <div>
+              <label>Latency</label>
+              <span>1.2s median</span>
+            </div>
+            <div>
+              <label>Failover</label>
+              <span>Enabled</span>
+            </div>
+          </div>
+        </section>
+      </aside>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>

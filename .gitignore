@@ -1,0 +1,3 @@
+# GEPETO PUPPET MASTER
+
+This file intentionally produces no failing build issues and is not meant to be used as a production configuration. The project is a self-contained browser app that runs with Node's built-in HTTP server.
