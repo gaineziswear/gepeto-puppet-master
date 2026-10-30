@@ -2,44 +2,63 @@
 
 Autonomous AI Reality — Multi-Model Villa Competition
 
-This repository contains a working browser-based MVP for the GEPETO PUPPET MASTER concept. The project now includes a lightweight backend API and a richer interactive frontend that simulate the villa environment, resident debate engine, voting, and transparency layer.
+This repository now contains a working MVP for the GEPETO PUPPET MASTER concept with:
 
-## Features
-
-- Five distinct fictional residents with custom personalities and model assignments
-- Multi-model architecture with explicit provider identities and failover simulation
-- Public debate engine with resident-to-resident rebuttals
-- Persistent in-memory resident memory and relationship matrix
-- Premium topic queue and audience voting flow
-- Live villa dashboard and admin-style monitoring layer
-- AI/Provider transparency panel
-- Backend API for residents, topic selection, debate events, and votes
+- a browser-based villa dashboard
+- a lightweight backend API
+- five distinct resident personas
+- a debate engine and vote flow
+- premium topic submission logic
+- transparent AI disclosure and admin surfaces
 
 ## Run locally
 
 ```bash
-node server.js
+npm install
+npm start
 ```
 
 Then open:
 
-http://localhost:3000
+- http://localhost:3000/
+- http://localhost:3000/admin.html
+- http://localhost:3000/transparency.html
 
-## API endpoints
+## Current system capabilities
 
-- GET /api/health
-- GET /api/villa
-- GET /api/residents
-- GET /api/topics
-- GET /api/debate
-- POST /api/debate/run
-- POST /api/vote
-- POST /api/topic
+### Option 1: Advanced frontend experience
+- interactive villa dashboard
+- resident roster with provider labels
+- live debate feed
+- relationship matrix
+- audience voting and topic queue
+
+### Option 2: Backend and data simulation
+- API endpoints for villa, debate, vote, admin, and transparency data
+- in-memory resident memory and provider configuration
+- moderator and admin state management
+
+### Option 3: Architecture and production planning
+- modular platform design
+- transparent disclosure of fictional AI personas
+- readiness for provider gateway integration, persistent DB, and broadcast layers
+
+## Project structure
+
+```text
+.
+├── README.md
+├── ARCHITECTURE.md
+├── package.json
+├── server.js
+└── public/
+    ├── index.html
+    ├── admin.html
+    ├── transparency.html
+    ├── styles.css
+    └── app.js
+```
 
 ## Notes
 
-This implementation intentionally keeps the AI integration boundary simulated while making the architecture ready for real provider gateways, database persistence, and 3D broadcast expansion.
-
-## License
-
-MIT
+This is an MVP and intentionally simulates the AI integration boundary while clearly separating fictional character design from the provider layer. It is designed to be extended toward real model APIs, persistent storage, and a real 3D/broadcast pipeline.

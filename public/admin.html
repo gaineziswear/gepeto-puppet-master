@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin — GEPETO PUPPET MASTER</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="topbar">
+      <div class="brand-wrap">
+        <div class="brand-mark">G</div>
+        <div>
+          <div class="eyebrow">Administration</div>
+          <div class="brand-title">GEPETO PUPPET MASTER</div>
+        </div>
+      </div>
+      <div class="nav-links">
+        <a href="/">Villa</a>
+        <a href="/admin.html">Admin</a>
+        <a href="/transparency.html">Transparency</a>
+      </div>
+    </div>
+
+    <main class="page-shell">
+      <section class="card wide-card">
+        <div class="section-title">Model and production control</div>
+        <div id="adminGrid" class="admin-grid large-grid"></div>
+      </section>
+
+      <section class="card wide-card">
+        <div class="section-title">Eviction queue</div>
+        <div id="evictionQueue" class="queue-list"></div>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>

@@ -1,68 +1,61 @@
-# GEPETO PUPPET MASTER — Architecture and Implementation Notes
-
-## Overview
-
-This project implements a production-oriented MVP for a fictional AI villa competition concept. The code is split into a public web app and a lightweight backend API that simulate the principal runtime flows without requiring real model access or a database.
-
-## Layered architecture
-
-### 1. Public audience layer
-- Live villa dashboard
-- Debate room
-- Resident roster
-- Vote controls
-- Premium topic queue
-- AI disclosure panel
-
-### 2. Resident simulation layer
-Each resident has:
-- identity and role
-- provider assignment
-- model label
-- memory notes
-- relationship scores
-- personality and debate style
-
-### 3. Orchestration layer
-The backend tracks:
-- current debate topic
-- feed of generated statements
-- vote counts
-- suggested premium topics
-- resident state
-
-### 4. Governance and transparency
-The platform exposes:
-- provider/model mapping
-- AI disclosure notices
-- separation between character identity and underlying backend model
-
-## API design
-
-The server provides JSON endpoints for:
-- health checks
-- submitting and retrieving debate state
-- topic queue changes
-- audience voting
-- resident data access
-
-This structure allows a future move to a persistent database or real provider services without redesigning the public app.
-
-## Current limitations
-
-- No real external model calls are made
-- No production database or auth is configured
-- No real-streaming or 3D engine integration yet
-- The app intentionally operates in memory for local development and concept validation
-
-## Next phases
-
-1. Add real AI provider SDK integration
-2. Expand to persistent Postgres storage
-3. Add WebSocket updates for real-time feed syncing
-4. Add an admin dashboard with override controls
-5. Add 3D scene or broadcast layer
+# GEPETO PUPPET MASTER — Architecture and Production Notes
 
 ## Summary
 
-The repository now demonstrates the key product concept and a functional runtime shell for a real GEPETO PUPPET MASTER build.
+This repository demonstrates an operational MVP of the GEPETO PUPPET MASTER concept: an autonomous villa simulation in which five fictional AI residents debate topics, build relationships, receive audience votes, and are managed through a lightweight admin layer.
+
+## Modular architecture
+
+### 1. Public audience application
+Used for:
+- live villa view
+- resident roster
+- topic feed
+- votes
+- premium topic queue
+
+### 2. Backend orchestration layer
+Used for:
+- maintaining current debate topic
+- storing resident and provider state in memory
+- handling vote results and topic submissions
+- managing admin and transparency views
+
+### 3. Resident simulation layer
+Each resident includes:
+- identity and character archetype
+- model/provider assignment
+- relationship map
+- memory notes
+- debate style
+
+### 4. Admin and governance layer
+Used for:
+- provider assignment and failover modes
+- token budget and latency status
+- audience vote control
+- eviction simulation and model status tracking
+
+### 5. Transparency layer
+Public pages explicitly state:
+- residents are fictional AI personas
+- providers are disclosed
+- no real human is being impersonated
+- the model layer is separate from character identity
+
+## Runtime assumptions
+
+The current implementation intentionally does not connect to live AI providers. Instead, it simulates the orchestration layer and represents an architecture that can be upgraded to real provider SDKs, a database, and a stream-ready broadcast pipeline.
+
+## Next production steps
+
+1. integrate real provider APIs behind a stable gateway
+2. replace in-memory state with a database layer
+3. add real-time WebSocket updates
+4. add secure admin auth and RBAC
+5. add 3D villa or broadcast composer integration
+6. add subscription verification and premium entitlement enforcement
+
+## Conclusion
+
+The current branch is the foundation for a functional concept prototype and is suitable for further expansion toward a production-level AI reality show platform.
