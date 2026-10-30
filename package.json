@@ -1,0 +1,10 @@
+{
+  "name": "gepeto-puppet-master",
+  "version": "1.0.0",
+  "description": "Autonomous AI reality villa simulation",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "license": "MIT"
+}

@@ -1,79 +1,68 @@
-# GEPETO PUPPET MASTER — Implementation Architecture
+# GEPETO PUPPET MASTER — Architecture and Implementation Notes
 
-This repository implements a production-oriented MVP of the "Autonomous AI Reality — Multi-Model Villa Competition" concept as a browser-driven simulation.
+## Overview
 
-## Architectural focus
+This project implements a production-oriented MVP for a fictional AI villa competition concept. The code is split into a public web app and a lightweight backend API that simulate the principal runtime flows without requiring real model access or a database.
 
-The implementation is split into a few deliberately clear layers:
+## Layered architecture
 
-1. Public audience layer
-   - Villa status board
-   - Debate feed
-   - Resident profiles
-   - Vote and eviction controls
-   - Premium topic queue
+### 1. Public audience layer
+- Live villa dashboard
+- Debate room
+- Resident roster
+- Vote controls
+- Premium topic queue
+- AI disclosure panel
 
-2. Resident simulation layer
-   - Resident personality definitions
-   - Relationship matrix
-   - Memory tracking
-   - Debate response generation
-
-3. Administration layer
-   - Model provider mapping
-   - Cost and token budget simulation
-   - Resident management and voting controls
-   - Broadcast and villa oversight
-
-4. Transparency layer
-   - Explicit AI disclosures
-   - Provider/model mapping visibility
-   - Distinction between fictional persona and underlying model API
-
-## Core simulation model
-
+### 2. Resident simulation layer
 Each resident has:
-
-- name
-- role
-- personality description
+- identity and role
 - provider assignment
-- model version
-- memory
-- opinions
-- relationship scores to other residents
-- debate style
+- model label
+- memory notes
+- relationship scores
+- personality and debate style
 
-The simulation does not train or create actual foundation models. Instead, it treats each resident as a fictional character orchestrated through a provider abstraction.
+### 3. Orchestration layer
+The backend tracks:
+- current debate topic
+- feed of generated statements
+- vote counts
+- suggested premium topics
+- resident state
 
-## Runtime behaviour
+### 4. Governance and transparency
+The platform exposes:
+- provider/model mapping
+- AI disclosure notices
+- separation between character identity and underlying backend model
 
-The app operates in memory and supports:
+## API design
 
-- selecting active debate topics
-- generating resident rebuttals and new lines
-- updating memory and relationship tension.
-- counting audience votes
-- evicting residents and replacing them with a new character stub
-- premium and public submission flows
+The server provides JSON endpoints for:
+- health checks
+- submitting and retrieving debate state
+- topic queue changes
+- audience voting
+- resident data access
 
-## Extension path
+This structure allows a future move to a persistent database or real provider services without redesigning the public app.
 
-For a full production build, this can grow into:
+## Current limitations
 
-- 3D villa in Unreal Engine or Three.js
-- real AI provider gateway with official SDKs
-- persistent Postgres or MongoDB state
-- WebSocket realtime updates
-- RTMP/OBS broadcasting pipeline
-- secure RBAC admin console
-- Patreon or subscription verification service
+- No real external model calls are made
+- No production database or auth is configured
+- No real-streaming or 3D engine integration yet
+- The app intentionally operates in memory for local development and concept validation
 
-## Constraints of this MVP
+## Next phases
 
-- No real external model calls are performed.
-- No persistent database is used.
-- No live stream integration is configured.
-- The visual presentation is browser-based rather than full 3D.
+1. Add real AI provider SDK integration
+2. Expand to persistent Postgres storage
+3. Add WebSocket updates for real-time feed syncing
+4. Add an admin dashboard with override controls
+5. Add 3D scene or broadcast layer
 
-These constraints are intentional and are clearly marked in the app to remain transparent with users.
+## Summary
+
+The repository now demonstrates the key product concept and a functional runtime shell for a real GEPETO PUPPET MASTER build.

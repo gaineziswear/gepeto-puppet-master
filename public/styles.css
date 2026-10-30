@@ -128,7 +128,8 @@ button {
 }
 
 .primary-btn,
-.secondary-btn {
+.secondary-btn,
+.vote-btn {
   border: none;
   border-radius: 12px;
   padding: 12px 18px;
@@ -142,14 +143,16 @@ button {
   font-weight: 800;
 }
 
-.secondary-btn {
+.secondary-btn,
+.vote-btn {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.08);
   color: var(--text);
 }
 
 .primary-btn:hover,
-.secondary-btn:hover {
+.secondary-btn:hover,
+.vote-btn:hover {
   transform: translateY(-1px);
 }
 
@@ -206,7 +209,8 @@ button {
   gap: 24px;
 }
 
-.resident-list {
+.resident-list,
+.provider-list {
   display: grid;
   gap: 12px;
 }
@@ -253,6 +257,16 @@ button {
   display: flex;
   justify-content: space-between;
   font-size: 12px;
+  color: var(--muted);
+}
+
+.provider-pill {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--line);
   color: var(--muted);
 }
 
@@ -335,16 +349,7 @@ button {
 }
 
 .vote-btn {
-  border: 1px solid var(--line);
-  background: rgba(255,255,255,0.02);
-  color: var(--text);
   padding: 10px 14px;
-  border-radius: 10px;
-  cursor: pointer;
-}
-
-.vote-btn:hover {
-  border-color: rgba(88, 210, 196, 0.8);
 }
 
 .topic-list {
